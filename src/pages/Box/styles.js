@@ -16,11 +16,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 24,
     fontWeight: "bold",
-    color: "#333"
+    color: "#333",
+    marginBottom: 10,
   },
 
   list: {
-    marginTop: 30
+    marginTop: 10
   },
 
   file: {
@@ -61,6 +62,13 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center"
+  },
+
+  loading: {
+    fontSize: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
   }
 });
 

@@ -10,12 +10,14 @@ import { distanceInWords } from 'date-fns';
 import pt from 'date-fns/locale/pt';
 import ImagePicker from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
+import OpenFile from 'react-native-doc-viewer';
 import FileViewer from 'react-native-file-viewer';
 import socket from 'socket.io-client';
 
 export default class Box extends Component {
   state = {
-    box : {}
+    box : {},
+    loadingText : '',
   }
   
   async componentDidMount(){
@@ -51,7 +53,8 @@ export default class Box extends Component {
 
     );
 
-    handleUpload = () => {
+    handleUpload = async () => {
+      
       ImagePicker.launchImageLibrary({}, async upload => {
         if(upload.error){
           console.log('image pick error');
@@ -59,6 +62,7 @@ export default class Box extends Component {
           console.log('canceled by user');
         } else {
           const data = new FormData();
+          this.setState({loadingText : 'Enviando item....'});
           
           const [prefix, suffix] = upload.fileName.split('.');
           const ext = suffix.toLowerCase() === 'heic' ? 'jpg' : suffix;
@@ -70,7 +74,8 @@ export default class Box extends Component {
             name: `${prefix}.${ext}`
           });
 
-          const response = api.post(`/boxes/${this.state.box._id}/files`, data);
+          await api.post(`/boxes/${this.state.box._id}/files`, data);
+          this.setState({loadingText : ''});
           
         }
       });
@@ -78,16 +83,29 @@ export default class Box extends Component {
 
     openFile = async file => {
       try {
-        const filePath = `${RNFS.DocumentDirectoryPath}/${file.title}`
 
-        await RNFS.downloadFile({
-          fromUrl: file.url,
-          toFile: filePath,
-        });
+        const [prefix, suffix] = file.title.split('.');
+        const ext = suffix.toLowerCase();
+       
+        this.setState({loadingText : 'Carregando item....'});
+          await OpenFile.openDoc([{
+          url: file.url, // Local "file://" + filepath
+          fileName:"sample",
+          cache:false,
+          fileType: ext,
+        }], (error, url) => {
+           if (error) {
+            
+             //console.error(error);
+           } else {
+            
+             //console.log(url);
+             this.setState({loadingText: ''});
+           }
+         })
 
-        await FileViewer.open(filePath);
       } catch (err) {
-        console.log(err);
+        //console.log(err);
       }
     }
   
@@ -95,6 +113,7 @@ export default class Box extends Component {
     return (
       <View style={styles.container}>
         <Text style={styles.boxTitle}>{this.state.box.title}</Text>
+        <Text style={styles.loading}>{this.state.loadingText}</Text>
 
         <FlatList 
           style={styles.list}
